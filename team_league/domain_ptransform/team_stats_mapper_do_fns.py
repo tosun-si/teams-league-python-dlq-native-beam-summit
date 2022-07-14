@@ -1,3 +1,6 @@
+import logging
+from typing import Dict
+
 from apache_beam import DoFn, pvalue
 from asgarde.failure import Failure
 
@@ -38,7 +41,7 @@ class TeamStatsMapperFn(DoFn):
         try:
             team_stats_raw: TeamStatsRaw = element
 
-            yield TeamStats.computeTeamStats(team_stats_raw)
+            yield TeamStats.compute_team_stats(team_stats_raw)
         except Exception as err:
             failure = Failure(
                 pipeline_step=self.pipeline_step,
@@ -55,11 +58,14 @@ class TeamStatsWithSloganFn(DoFn):
         super().__init__(*unused_args, **unused_kwargs)
         self.pipeline_step = pipeline_step
 
-    def process(self, element, *args, **kwargs):
+    def setup(self):
+        logging.info("##### Start team stats with Slogan")
+
+    def process(self, element, slogans: Dict, *args, **kwargs):
         try:
             team_stats: TeamStats = element
 
-            yield team_stats.add_slogan_to_stats()
+            yield team_stats.add_slogan_to_stats(slogans)
         except Exception as err:
             failure = Failure(
                 pipeline_step=self.pipeline_step,
